@@ -23,6 +23,9 @@ import java.util.stream.Collectors;
 
 @Service
 public class ItemServiceImpl implements ItemService {
+
+
+
     @Autowired
     private ItemsMapper itemsMapper;
     @Autowired
@@ -139,6 +142,12 @@ public class ItemServiceImpl implements ItemService {
         Collections.addAll(specIdsList,ids);
 
         return itemsMapperCustom.queryItemsBySpecIds(specIdsList);
+    }
+    @Transactional(propagation = Propagation.SUPPORTS)
+    @Override
+    public ItemsSpec queryItemSpecById(String specId) {
+
+        return itemsSpecMapper.selectByPrimaryKey(specId);
     }
 
     private PagedGridResult setPagedGridResult(Integer page,List<?> list) {
