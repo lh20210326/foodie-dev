@@ -14,6 +14,7 @@ public class HelloConroller {
         logger.info("info:hello");
         logger.warn("warn:hello");
         logger.error("error:hello");
+        System.out.println("liuhao testGit 7.16");
         return "hello liuhao";
     }
 }
