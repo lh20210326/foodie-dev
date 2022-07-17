@@ -72,7 +72,7 @@ public class AddressServiceImpl implements AddressService {
         //1.查找默认地址，设置为不默认
         UserAddress queryAddress = new UserAddress();
         queryAddress.setUserId(userId);
-        queryAddress.setIsDefault(YesOrNo.Yest.type);
+        queryAddress.setIsDefault(YesOrNo.Yes.type);
         List<UserAddress> list = userAddressMapper.select(queryAddress);
         for(UserAddress ua:list){
             ua.setIsDefault(YesOrNo.NO.type);
@@ -83,7 +83,7 @@ public class AddressServiceImpl implements AddressService {
         UserAddress defaultAddress = new UserAddress();
         defaultAddress.setUserId(userId);
         defaultAddress.setId(addressId);
-        defaultAddress.setIsDefault(YesOrNo.Yest.type);
+        defaultAddress.setIsDefault(YesOrNo.Yes.type);
         userAddressMapper.updateByPrimaryKeySelective(defaultAddress);
     }
     @Transactional(propagation = Propagation.SUPPORTS)

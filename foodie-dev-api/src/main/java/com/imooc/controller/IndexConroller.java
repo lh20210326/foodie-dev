@@ -33,7 +33,7 @@ public class IndexConroller {
     @ApiOperation(value = "获取首页轮播图列表",notes = "获取首页轮播图列表",httpMethod = "GET")
     @GetMapping("/carousel")
     public IMOOCJSONResult carousel() {
-        List<Carousel> list = carouselService.queryAll(YesOrNo.Yest.type);
+        List<Carousel> list = carouselService.queryAll(YesOrNo.Yes.type);
         return IMOOCJSONResult.ok(list);
     }
     /**
