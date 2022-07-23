@@ -113,11 +113,19 @@ public class CenterUserController extends BaseController {
     private Map<String,String> getErrors(BindingResult result){
         Map<String,String> map=new HashMap<>();
         List<FieldError> errorList = result.getFieldErrors();
-        for(FieldError error:errorList){
-            String errorField = error.getField();
-            String errorMsg = error.getDefaultMessage();
+//        for(FieldError error:errorList){
+//            String errorField = error.getField();
+//            String errorMsg = error.getDefaultMessage();
+//            map.put(errorField,errorMsg);
+//        }
+        // lambda表达式写法
+        errorList.stream().forEach(errorItem->{
+            String errorField = errorItem.getField();
+            String errorMsg = errorItem.getDefaultMessage();
             map.put(errorField,errorMsg);
-        }
+        });
+
+
 
         return map;
     }
