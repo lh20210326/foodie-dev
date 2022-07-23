@@ -54,9 +54,8 @@ public class CenterUserController extends BaseController {
             if(StringUtils.isNotBlank(fileName)){
                 FileOutputStream fileOutputStream =null;
                 try {
-//                    String[] fileNameArr = fileName.split("\\.");
-                    String[] fileNameArr = fileName.split(".");
-                    System.out.println(fileNameArr[0]);
+                    //测试git冲突后的
+                    String[] fileNameArr = fileName.split("\\.");
                     //获取文件的后缀名
                     String suffix = fileNameArr[fileNameArr.length - 1];
                     //文件名称重组
@@ -115,19 +114,11 @@ public class CenterUserController extends BaseController {
     private Map<String,String> getErrors(BindingResult result){
         Map<String,String> map=new HashMap<>();
         List<FieldError> errorList = result.getFieldErrors();
-//        for(FieldError error:errorList){
-//            String errorField = error.getField();
-//            String errorMsg = error.getDefaultMessage();
-//            map.put(errorField,errorMsg);
-//        }
-        // lambda表达式写法
-        errorList.stream().forEach(errorItem->{
-            String errorField = errorItem.getField();
-            String errorMsg = errorItem.getDefaultMessage();
+        for(FieldError error:errorList){
+            String errorField = error.getField();
+            String errorMsg = error.getDefaultMessage();
             map.put(errorField,errorMsg);
-        });
-
-
+        }
 
         return map;
     }
