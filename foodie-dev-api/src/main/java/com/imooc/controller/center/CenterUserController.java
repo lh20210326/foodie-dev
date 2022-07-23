@@ -54,7 +54,9 @@ public class CenterUserController extends BaseController {
             if(StringUtils.isNotBlank(fileName)){
                 FileOutputStream fileOutputStream =null;
                 try {
-                    String[] fileNameArr = fileName.split("\\.");
+//                    String[] fileNameArr = fileName.split("\\.");
+                    String[] fileNameArr = fileName.split(".");
+                    System.out.println(fileNameArr[0]);
                     //获取文件的后缀名
                     String suffix = fileNameArr[fileNameArr.length - 1];
                     //文件名称重组
