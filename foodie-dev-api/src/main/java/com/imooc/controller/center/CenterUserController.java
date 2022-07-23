@@ -4,8 +4,10 @@ import com.imooc.controller.BaseController;
 import com.imooc.pojo.Users;
 import com.imooc.pojo.bo.UserBO;
 import com.imooc.pojo.bo.center.CenterUserBO;
+import com.imooc.resource.FileUpload;
 import com.imooc.service.center.CenterUserService;
 import com.imooc.utils.CookieUtils;
+import com.imooc.utils.DateUtil;
 import com.imooc.utils.IMOOCJSONResult;
 import com.imooc.utils.JsonUtils;
 import io.swagger.annotations.Api;
@@ -13,6 +15,7 @@ import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.time.DateUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
@@ -37,6 +40,9 @@ public class CenterUserController extends BaseController {
     @Autowired
     private CenterUserService centerUserService;
 
+    @Autowired
+    private FileUpload fileUpload;
+
     @ApiOperation(value = "用户头像修改",notes = "用户头像修改",httpMethod = "POST")
     @PostMapping("uploadFace")
     public IMOOCJSONResult uploadFace(
@@ -46,7 +52,8 @@ public class CenterUserController extends BaseController {
                     MultipartFile file,
             HttpServletRequest request, HttpServletResponse response){
         //定义头像保存地址
-        String fileSpace=IMAGE_USER_FACE_LOCATION;
+//        String fileSpace=IMAGE_USER_FACE_LOCATION;
+        String fileSpace=fileUpload.getImageUserFaceLocation();
         //在路径上为每个用增加一个自己的文件夹
         String uploadFileSpace= File.separator+userId;
         if(file!=null){
@@ -58,10 +65,17 @@ public class CenterUserController extends BaseController {
                     String[] fileNameArr = fileName.split("\\.");
                     //获取文件的后缀名
                     String suffix = fileNameArr[fileNameArr.length - 1];
+                    if(!suffix.equalsIgnoreCase("png")&&
+                            !suffix.equalsIgnoreCase("jpg")&&
+                            !suffix.equalsIgnoreCase("jpeg")){
+                        return IMOOCJSONResult.errorMsg("图片格式不正确！");
+                    }
                     //文件名称重组
                     String newFileName="face-"+userId+"."+suffix;
                     //上传最终位置
                     String finalFacePath=fileSpace+uploadFileSpace+File.separator+newFileName;
+                    //用于给web服务访问的地址
+                    uploadFileSpace+=("/"+newFileName);
                     File outFile = new File(finalFacePath);
                     if(outFile.getParentFile()!=null){
                         outFile.getParentFile().mkdirs();
@@ -86,8 +100,13 @@ public class CenterUserController extends BaseController {
         }else {
             return IMOOCJSONResult.errorMsg("文件不能为空");
         }
-
-        return IMOOCJSONResult.ok();
+        String imageServelUrl = fileUpload.getImageServerUrl();
+        Users users = centerUserService.updateUserFace(userId, (imageServelUrl + uploadFileSpace)
+        +"?t="+ DateUtil.getCurrentDateString(DateUtil.DATE_PATTERN));
+        users = setNullProperty(users);
+        CookieUtils.setCookie(request,response,"user", JsonUtils.objectToJson(users),true);
+        // TODO 后续要改，增加令牌token,会整合进redis，分布式会话
+        return IMOOCJSONResult.ok(users);
     }
 
 

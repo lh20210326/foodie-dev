@@ -5,15 +5,19 @@ spring:
     url: jdbc:mysql://localhost:3306/foodie-shop-dev?useUnicode=true&characterEncoding=UTF-8&autoReconnect
     username: root
     password: root
-  hikari:
-    connection-timeout: 30000
-    minimum-idle: 5
-    maximum-pool-size: 20
-    auto-commit: true
-    idle-timeout: 600000
-    pool-name: DateSourceHikariCP
-    max-lifetime: 1800000
-    connection-test-query: SELECT 1
+    hikari:
+      connection-timeout: 30000
+      minimum-idle: 5
+      maximum-pool-size: 20
+      auto-commit: true
+      idle-timeout: 600000
+      pool-name: DateSourceHikariCP
+      max-lifetime: 1800000
+      connection-test-query: SELECT 1
+  servlet:
+    multipart:
+      max-file-size: 512000  #文件上传大小限制为500kb
+      max-request-size: 512000 #请求大小限制为500kb
 mybatis:
   type-aliases-package: com.imooc.pojo # 所有POJO类所在包路径
   mapper-locations: classpath:mapper/*.xml # mapper映射文件
