@@ -3,8 +3,10 @@ package com.imooc.controller.center;
 import com.imooc.controller.BaseController;
 import com.imooc.pojo.Orders;
 import com.imooc.pojo.Users;
+import com.imooc.pojo.vo.OrderStatusCountsVO;
 import com.imooc.service.center.CenterUserService;
 import com.imooc.service.center.MyOrdersService;
+import com.imooc.service.impl.center.MyOrdersServiceImpl;
 import com.imooc.utils.IMOOCJSONResult;
 import com.imooc.utils.PagedGridResult;
 import io.swagger.annotations.Api;
@@ -47,6 +49,19 @@ public class MyOrdersController extends BaseController {
     }
 
 
+    @ApiOperation(value = "获得订单状态数概况",notes = "获得订单状态数概况",httpMethod = "POST")
+    @PostMapping("/statusCounts")
+    public IMOOCJSONResult statusCounts(
+            @ApiParam(name = "userId",value = "用户id",required = true)
+            @RequestParam String userId) {
+        if(StringUtils.isBlank(userId)){
+            return IMOOCJSONResult.errorMsg(null);
+        }
+
+        OrderStatusCountsVO result = myOrdersService.getOrderStatusCounts(userId);
+        return IMOOCJSONResult.ok(result);
+    }
+
     @ApiOperation(value = "用户确认收货",notes = "用户确认收货",httpMethod = "POST")
     @PostMapping("/confirmReceive")
     public IMOOCJSONResult confirmReceive(
@@ -81,6 +96,29 @@ public class MyOrdersController extends BaseController {
         }
         return IMOOCJSONResult.ok();
     }
+
+    @ApiOperation(value = "查询订单动向",notes = "查询订单动向",httpMethod = "POST")
+    @PostMapping("/trend")
+    public IMOOCJSONResult trend(
+            @ApiParam(name = "userId",value = "用户id",required = true)
+            @RequestParam String userId,
+            @ApiParam(name = "page",value = "要查询的页数",required = false)
+            @RequestParam Integer page,
+            @ApiParam(name = "pageSize",value = "分页的每一页显示记录数",required = false)
+            @RequestParam Integer pageSize) {
+        if(StringUtils.isBlank(userId)){
+            return IMOOCJSONResult.errorMsg(null);
+        }
+        if(page==null){
+            page=1;
+        }
+        if(pageSize==null){
+            pageSize=COMMENT_PAGE_SIZE;
+        }
+        PagedGridResult grid = myOrdersService.queryMyOrder(userId, page, pageSize);
+        return IMOOCJSONResult.ok(grid);
+    }
+
     /**
      * 用于验证用户和订单是否有关联关系，避免非法调用
      * @return

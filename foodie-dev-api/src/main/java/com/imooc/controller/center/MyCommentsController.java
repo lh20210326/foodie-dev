@@ -84,5 +84,26 @@ public class MyCommentsController extends BaseController {
         }
         return IMOOCJSONResult.ok(orders);
     }
+    @ApiOperation(value = "查询我的评价",notes = "查询我的评价",httpMethod = "POST")
+    @PostMapping("/query")
+    public IMOOCJSONResult query(
+            @ApiParam(name = "userId",value = "用户id",required = true)
+            @RequestParam String userId,
+            @ApiParam(name = "page",value = "要查询的页数",required = false)
+            @RequestParam Integer page,
+            @ApiParam(name = "pageSize",value = "分页的每一页显示记录数",required = false)
+            @RequestParam Integer pageSize) {
+        if(StringUtils.isBlank(userId)){
+            return IMOOCJSONResult.errorMsg(null);
+        }
+        if(page==null){
+            page=1;
+        }
+        if(pageSize==null){
+            pageSize=COMMENT_PAGE_SIZE;
+        }
+        PagedGridResult pagedGridResult = myCommentsService.queryMyComments(userId, page, pageSize);
+        return IMOOCJSONResult.ok(pagedGridResult);
+    }
 
 }
