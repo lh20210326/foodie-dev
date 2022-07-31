@@ -1,0 +1,5 @@
+server:
+  port: 80
+spring:
+  url: jdbc:mysql://10.0.8.8:3306/foodie-shop-dev?useUnicode=true&characterEncoding=UTF-8&autoReconnect
+  password: root
