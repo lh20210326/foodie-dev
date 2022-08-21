@@ -8,17 +8,22 @@ import com.imooc.pojo.vo.NewItemsVO;
 import com.imooc.service.CarouselService;
 import com.imooc.service.CategoryService;
 import com.imooc.utils.IMOOCJSONResult;
+import com.imooc.utils.JsonUtils;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
+import org.apache.commons.lang3.StringUtils;
+import org.n3r.idworker.utils.RedisOperator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.AutoConfigurationPackage;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Api(value = "首页",tags = {"首页展示的相关接口"})
@@ -29,11 +34,18 @@ public class IndexConroller {
     private CarouselService carouselService;
     @Autowired
     private CategoryService categoryService;
-
+    @Autowired
+    private RedisOperator redisOperator;
     @ApiOperation(value = "获取首页轮播图列表",notes = "获取首页轮播图列表",httpMethod = "GET")
     @GetMapping("/carousel")
     public IMOOCJSONResult carousel() {
-        List<Carousel> list = carouselService.queryAll(YesOrNo.Yes.type);
+        String carouselStr = redisOperator.get("carousel");
+        List<Carousel> list = new ArrayList<>();
+        if(StringUtils.isBlank(carouselStr)){
+            list = carouselService.queryAll(YesOrNo.Yes.type);
+            redisOperator.set("carousel", JsonUtils.objectToJson(list));
+        }
+        list= JsonUtils.jsonToList(carouselStr,Carousel.class);
         return IMOOCJSONResult.ok(list);
     }
     /**
