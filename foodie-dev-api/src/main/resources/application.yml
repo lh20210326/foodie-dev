@@ -1,6 +1,6 @@
 spring:
   profiles:
-    active: dev
+    active: prod
   datasource:
     type: com.zaxxer.hikari.HikariDataSource
     driver-class-name: com.mysql.jdbc.Driver
@@ -16,7 +16,8 @@ spring:
       pool-name: DateSourceHikariCP
       max-lifetime: 1800000
       connection-test-query: SELECT 1
-
+  jmx:
+    default-domain: api
   servlet:
     multipart:
       max-file-size: 512000  #文件上传大小限制为500kb

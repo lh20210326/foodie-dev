@@ -1,9 +1,9 @@
 server:
-  port: 8088
+  port: 80
 spring:
   datasource:
-    url: jdbc:mysql://101.42.168.101:3306/foodie-shop-dev?useUnicode=true&characterEncoding=UTF-8&autoReconnect=true
-    password: liuhao123@
+    url: jdbc:mysql://10.0.8.8:3306/foodie-shop-dev?useUnicode=true&characterEncoding=UTF-8&autoReconnect
+    password: root
   redis:
     database: 1
     host: 101.42.168.101

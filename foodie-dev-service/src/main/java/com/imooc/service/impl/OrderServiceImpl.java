@@ -6,6 +6,7 @@ import com.imooc.mapper.OrderItemsMapper;
 import com.imooc.mapper.OrderStatusMapper;
 import com.imooc.mapper.OrdersMapper;
 import com.imooc.pojo.*;
+import com.imooc.pojo.bo.ShopcartBO;
 import com.imooc.pojo.bo.SubmitOrderBO;
 import com.imooc.service.AddressService;
 import com.imooc.service.ItemService;
@@ -16,7 +17,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 
 @Service
 public class OrderServiceImpl implements OrderService {
@@ -34,7 +37,7 @@ public class OrderServiceImpl implements OrderService {
     private OrderStatusMapper orderStatusMapper;
     @Transactional(propagation = Propagation.REQUIRED)
     @Override
-    public String createOrder(SubmitOrderBO submitOrderBO) {
+    public String createOrder(List<ShopcartBO> shopcartList,SubmitOrderBO submitOrderBO) {
         //订单表信息封装
         String userId = submitOrderBO.getUserId();
         String addressId = submitOrderBO.getAddressId();
@@ -65,9 +68,12 @@ public class OrderServiceImpl implements OrderService {
         String[] itemSpecIdArr = itemSpecIds.split(",");
         Integer totalAmount=0;//原价累计
         Integer realPayAmount=0;//优惠后价格累计
+        List<ShopcartBO> toBeRemovedShopcatdList= new ArrayList();
         for(String itemSpecId:itemSpecIdArr){
-            //TODO 整合redis后，商品数量重新从redis获取
-            int buyCounts=1;
+            // 整合redis后，商品数量重新从redis获取
+            ShopcartBO cartItem = getBuyCountsFromShopcart(shopcartList, itemSpecId);
+            toBeRemovedShopcatdList.add(cartItem);
+            int buyCounts = cartItem.getBuyCounts();
             ItemsSpec itemsSpec = itemService.queryItemSpecById(itemSpecId);
             totalAmount+=itemsSpec.getPriceNormal()*buyCounts;
             realPayAmount+=itemsSpec.getPriceDiscount()*buyCounts;
@@ -101,5 +107,20 @@ public class OrderServiceImpl implements OrderService {
         waitPayOrderStatus.setCreatedTime(new Date());
         orderStatusMapper.insert(waitPayOrderStatus);
         return orderId;
+    }
+
+    /**
+     * 从redis中
+     * @param shopcartList
+     * @param specId
+     * @return
+     */
+    private ShopcartBO getBuyCountsFromShopcart(List<ShopcartBO> shopcartList,String specId){
+        for (ShopcartBO cart:shopcartList) {
+            if(cart.getSpecId().equals(specId)){
+                return cart;
+            }
+        }
+        return null;
     }
 }

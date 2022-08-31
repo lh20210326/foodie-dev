@@ -57,7 +57,13 @@ public class IndexConroller {
     @ApiOperation(value = "获取商品分类(一级分类)",notes = "获取商品分类(一级分类)",httpMethod = "GET")
     @GetMapping("/cats")
     public IMOOCJSONResult queryAllRootLevelCat() {
-        List<Category> list = categoryService.queryAllRootLevelCat();
+        String cats = redisOperator.get("cats");
+        List<Category> list = new ArrayList<>();
+        if(StringUtils.isBlank(cats)){
+            list = categoryService.queryAllRootLevelCat();
+            redisOperator.set("cats",JsonUtils.objectToJson(list));
+        }
+        list= JsonUtils.jsonToList(cats, Category.class);
         return IMOOCJSONResult.ok(list);
     }
 
@@ -69,8 +75,16 @@ public class IndexConroller {
         if(rootCatId==null){
             return IMOOCJSONResult.errorMsg("分类不存在");
         }
-        List<CategoryVO> subCatlist = categoryService.getSubCatlist(rootCatId);
-        return IMOOCJSONResult.ok(subCatlist);
+        //这里使用了hash数据类型，这是自己的想法，如果用string类型，
+        //那么第一个一级分类下二级分类的缓存，其他分类下会直接使用，这就产生了一个bug
+        String subCat = redisOperator.hget(rootCatId.toString(),"subCat");
+        List<CategoryVO> list = new ArrayList<>();
+        if(StringUtils.isBlank(subCat)) {
+            list = categoryService.getSubCatlist(rootCatId);
+            redisOperator.hset(rootCatId.toString(),"subCat",JsonUtils.objectToJson(list));
+        }
+        list= JsonUtils.jsonToList(subCat, CategoryVO.class);
+        return IMOOCJSONResult.ok(list);
     }
 
     @ApiOperation(value = "查询每个一级分类下最新商品数据",notes = "查询每个一级分类下最新商品数据",httpMethod = "GET")
