@@ -11,4 +11,6 @@ public interface OrderService {
      * @param submitOrderBO
      */
     public String createOrder(List<ShopcartBO> shopcartList,SubmitOrderBO submitOrderBO);
+
+    public void updateOrderStatus(String orderId,Integer orderStatus);
 }

@@ -1,5 +1,6 @@
 package com.imooc.controller;
 
+import com.imooc.enums.OrderStatusEnum;
 import com.imooc.enums.PayMethod;
 import com.imooc.pojo.UserAddress;
 import com.imooc.pojo.bo.AddressBO;
@@ -16,6 +17,7 @@ import io.swagger.annotations.ApiOperation;
 import org.apache.commons.lang3.StringUtils;
 import org.n3r.idworker.utils.RedisOperator;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
@@ -57,6 +59,16 @@ public class OrdersConroller extends BaseController{
         return IMOOCJSONResult.ok(orderId);
     }
 
+    /**
+     * 支付中心回调后台接口
+     * @param merchantOrderId order_id
+     * @return
+     */
+    @PostMapping("notifyMerchantOrderPaid")
+    public Integer notifyMerchantOrderPaid(String merchantOrderId){
+        orderService.updateOrderStatus(merchantOrderId, OrderStatusEnum.WAIT_DELIVER.type);
+        return HttpStatus.OK.value();
+    }
 
 }
 
