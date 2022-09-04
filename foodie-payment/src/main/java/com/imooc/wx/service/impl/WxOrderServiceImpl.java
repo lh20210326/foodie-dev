@@ -65,6 +65,7 @@ public class WxOrderServiceImpl implements WxOrderService {
 		p.put("spbill_create_ip", wxPayResource.getSpbillCreateIp());
 		p.put("notify_url", wxPayResource.getNotifyUrl());
 		p.put("trade_type", wxPayResource.getTradeType());
+
 		// 获得签名
 		String sign = Sign.createSign("utf-8", p, wxPayResource.getSecrectKey());
 		o.setSign(sign);

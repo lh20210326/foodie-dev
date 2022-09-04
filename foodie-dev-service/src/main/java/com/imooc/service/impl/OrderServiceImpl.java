@@ -8,6 +8,8 @@ import com.imooc.mapper.OrdersMapper;
 import com.imooc.pojo.*;
 import com.imooc.pojo.bo.ShopcartBO;
 import com.imooc.pojo.bo.SubmitOrderBO;
+import com.imooc.pojo.vo.MerchantOrdersVO;
+import com.imooc.pojo.vo.OrdersVO;
 import com.imooc.service.AddressService;
 import com.imooc.service.ItemService;
 import com.imooc.service.OrderService;
@@ -37,7 +39,7 @@ public class OrderServiceImpl implements OrderService {
     private OrderStatusMapper orderStatusMapper;
     @Transactional(propagation = Propagation.REQUIRED)
     @Override
-    public String createOrder(List<ShopcartBO> shopcartList,SubmitOrderBO submitOrderBO) {
+    public OrdersVO createOrder(List<ShopcartBO> shopcartList,SubmitOrderBO submitOrderBO) {
         //订单表信息封装
         String userId = submitOrderBO.getUserId();
         String addressId = submitOrderBO.getAddressId();
@@ -106,7 +108,17 @@ public class OrderServiceImpl implements OrderService {
         waitPayOrderStatus.setOrderStatus(OrderStatusEnum.WAIT_PAY.type);
         waitPayOrderStatus.setCreatedTime(new Date());
         orderStatusMapper.insert(waitPayOrderStatus);
-        return orderId;
+        //构建商户订单，传给支付中心
+        MerchantOrdersVO merchantOrdersVO = new MerchantOrdersVO();
+        merchantOrdersVO.setMerchantOrderId(orderId);
+        merchantOrdersVO.setMerchantUserId(userId);
+        merchantOrdersVO.setAmount(realPayAmount+postAmount);
+        merchantOrdersVO.setPayMethod(payMethod);
+        //构建自定义订单vo
+        OrdersVO ordersVO = new OrdersVO();
+        ordersVO.setOrderId(orderId);
+        ordersVO.setMerchantOrdersVO(merchantOrdersVO);
+        return ordersVO;
     }
     @Transactional(propagation = Propagation.REQUIRED)
     @Override

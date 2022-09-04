@@ -6,6 +6,8 @@ import com.imooc.pojo.UserAddress;
 import com.imooc.pojo.bo.AddressBO;
 import com.imooc.pojo.bo.ShopcartBO;
 import com.imooc.pojo.bo.SubmitOrderBO;
+import com.imooc.pojo.vo.MerchantOrdersVO;
+import com.imooc.pojo.vo.OrdersVO;
 import com.imooc.service.AddressService;
 import com.imooc.service.OrderService;
 import com.imooc.utils.CookieUtils;
@@ -17,8 +19,9 @@ import io.swagger.annotations.ApiOperation;
 import org.apache.commons.lang3.StringUtils;
 import org.n3r.idworker.utils.RedisOperator;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
+import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.client.RestTemplate;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -34,6 +37,8 @@ public class OrdersConroller extends BaseController{
     private OrderService orderService;
     @Autowired
     private RedisOperator redisOperator;
+    @Autowired
+    private RestTemplate restTemplate;
     @ApiOperation(value = "用户下单",notes = "用户下单",httpMethod = "POST")
     @PostMapping("/create")
     public IMOOCJSONResult create(@RequestBody SubmitOrderBO submitOrderBO,
@@ -53,9 +58,28 @@ public class OrdersConroller extends BaseController{
         }
         List<ShopcartBO> shopcartList = JsonUtils.jsonToList(shopcartJson, ShopcartBO.class);
 
-        String orderId = orderService.createOrder(shopcartList,submitOrderBO);
+        OrdersVO ordersVO = orderService.createOrder(shopcartList,submitOrderBO);
+        String orderId = ordersVO.getOrderId();
+
+
         //TODO 整合redis之后，完善购物车中的已结算商品清除，并且同步到前端cookie
         CookieUtils.setCookie(request,response,FOODIE_SHOPCART,"",true);
+
+        MerchantOrdersVO merchantOrdersVO = ordersVO.getMerchantOrdersVO();
+        merchantOrdersVO.setReturnUrl(payReturnUrl);
+        //为了测试，金额统一（1分钱）
+        merchantOrdersVO.setAmount(1);
+        HttpHeaders httpHeaders = new HttpHeaders();
+        httpHeaders.setContentType(MediaType.APPLICATION_JSON);
+        httpHeaders.add("imoocUserId","liuhao");
+        httpHeaders.add("password","123123");
+        String paymentUrl="http://payment.yinchuan.work/foodie-payment/payment/createMerchantOrder";
+        HttpEntity<MerchantOrdersVO> entity = new HttpEntity<>(merchantOrdersVO,httpHeaders);
+        ResponseEntity<IMOOCJSONResult> responseEntity=restTemplate.postForEntity(paymentUrl,entity,IMOOCJSONResult.class);
+        IMOOCJSONResult paymentResult = responseEntity.getBody();
+        if(paymentResult.getStatus()!=200){
+            return IMOOCJSONResult.errorMsg("支付中心创建失败");
+        }
         return IMOOCJSONResult.ok(orderId);
     }
 
