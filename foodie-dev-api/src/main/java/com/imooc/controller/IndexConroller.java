@@ -77,11 +77,17 @@ public class IndexConroller {
         }
         //这里使用了hash数据类型，这是自己的想法，如果用string类型，
         //那么第一个一级分类下二级分类的缓存，其他分类下会直接使用，这就产生了一个bug
-        String subCat = redisOperator.hget(rootCatId.toString(),"subCat");
+        //2022.9.10.原来用的hset。后来改为set。参数名有：。就可以有层级目录上面的bug就没有了
+        String subCat = redisOperator.get("subCat:"+rootCatId);
         List<CategoryVO> list = new ArrayList<>();
         if(StringUtils.isBlank(subCat)) {
             list = categoryService.getSubCatlist(rootCatId);
-            redisOperator.hset(rootCatId.toString(),"subCat",JsonUtils.objectToJson(list));
+            if(list!=null&&list.size()>0){
+                redisOperator.set("subCat:"+rootCatId,JsonUtils.objectToJson(list));
+            }else {
+                //2022.9.10.考虑到缓存穿透的问题，如果有非法参数请求，那么缓存空值进去，设置缓存到期时间即可
+                redisOperator.set("subCat:"+rootCatId,JsonUtils.objectToJson(list),5*60);
+            }
         }
         list= JsonUtils.jsonToList(subCat, CategoryVO.class);
         return IMOOCJSONResult.ok(list);
