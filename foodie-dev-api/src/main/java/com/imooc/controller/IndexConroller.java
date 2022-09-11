@@ -88,6 +88,8 @@ public class IndexConroller {
                 //2022.9.10.考虑到缓存穿透的问题，如果有非法参数请求，那么缓存空值进去，设置缓存到期时间即可
                 redisOperator.set("subCat:"+rootCatId,JsonUtils.objectToJson(list),5*60);
             }
+            //缓存没有，查询数据库，防止空指针
+            return IMOOCJSONResult.ok(list);
         }
         list= JsonUtils.jsonToList(subCat, CategoryVO.class);
         return IMOOCJSONResult.ok(list);
