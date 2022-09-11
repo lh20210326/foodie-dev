@@ -11,4 +11,7 @@ http://localhost/doc.html
 前端静态页面部署在nginx 
 nginx的安装目录 /usr/local/nginx
 静态页面位置：/home/website/foodie-shop /home/website/foodie-center
-
+6日志间隔时间调整
+现在本地测试每分钟打印一条日志。log4j.properties里面 log4j.appender.file.DatePatter
+yyyy-MM-dd-HH-mm 精确到分钟改为精确到天 yyyy-MM-dd
+7本地前端地址  D:\tomcat\apache-tomcat-8.5.31\bin

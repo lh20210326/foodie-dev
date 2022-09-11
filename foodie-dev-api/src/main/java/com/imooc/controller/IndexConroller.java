@@ -36,6 +36,7 @@ public class IndexConroller {
     private CategoryService categoryService;
     @Autowired
     private RedisOperator redisOperator;
+    final static Logger logger=LoggerFactory.getLogger(IndexConroller.class);
     @ApiOperation(value = "获取首页轮播图列表",notes = "获取首页轮播图列表",httpMethod = "GET")
     @GetMapping("/carousel")
     public IMOOCJSONResult carousel() {
@@ -72,6 +73,7 @@ public class IndexConroller {
     public IMOOCJSONResult subCat(
             @ApiParam(name = "rootCatId",value = "一级分类id",required = true)
             @PathVariable Integer rootCatId){
+        logger.info("首页-获取商品子分类"+rootCatId);
         if(rootCatId==null){
             return IMOOCJSONResult.errorMsg("分类不存在");
         }

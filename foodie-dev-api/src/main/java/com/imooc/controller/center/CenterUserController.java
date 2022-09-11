@@ -4,6 +4,7 @@ import com.imooc.controller.BaseController;
 import com.imooc.pojo.Users;
 import com.imooc.pojo.bo.UserBO;
 import com.imooc.pojo.bo.center.CenterUserBO;
+import com.imooc.pojo.vo.UsersVO;
 import com.imooc.resource.FileUpload;
 import com.imooc.service.center.CenterUserService;
 import com.imooc.utils.CookieUtils;
@@ -16,6 +17,8 @@ import io.swagger.annotations.ApiParam;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.DateUtils;
+import org.n3r.idworker.utils.RedisOperator;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
@@ -32,6 +35,7 @@ import java.io.InputStream;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 @Api(value = "用户信息接口",tags = {"用户信息相关接口"})
 @RestController
@@ -42,6 +46,9 @@ public class CenterUserController extends BaseController {
 
     @Autowired
     private FileUpload fileUpload;
+
+    @Autowired
+    private RedisOperator redisOperator;
 
     @ApiOperation(value = "用户头像修改",notes = "用户头像修改",httpMethod = "POST")
     @PostMapping("uploadFace")
@@ -104,8 +111,11 @@ public class CenterUserController extends BaseController {
         Users users = centerUserService.updateUserFace(userId, (imageServelUrl + uploadFileSpace)
         +"?t="+ DateUtil.getCurrentDateString(DateUtil.DATE_PATTERN));
         users = setNullProperty(users);
-        CookieUtils.setCookie(request,response,"user", JsonUtils.objectToJson(users),true);
-        // TODO 后续要改，增加令牌token,会整合进redis，分布式会话
+        UsersVO usersVO = convertUsersVO(users);
+
+        CookieUtils.setCookie(request,response,"user", JsonUtils.objectToJson(usersVO),true);
+        // 后续要改，增加令牌token,会整合进redis，分布式会话
+
         return IMOOCJSONResult.ok(users);
     }
 
@@ -125,9 +135,11 @@ public class CenterUserController extends BaseController {
             return IMOOCJSONResult.errorMap(errorMap);
         }
         Users users = centerUserService.updateUserInfo(userId, centerUserBO);
-        users = setNullProperty(users);
-        CookieUtils.setCookie(request,response,"user", JsonUtils.objectToJson(users),true);
-        // TODO 后续要改，增加令牌token,会整合进redis，分布式会话
+//        users = setNullProperty(users);
+        // 后续要改，增加令牌token,会整合进redis，分布式会话
+        UsersVO usersVO = convertUsersVO(users);
+        CookieUtils.setCookie(request,response,"user", JsonUtils.objectToJson(usersVO),true);
+
         return IMOOCJSONResult.ok();
     }
     private Map<String,String> getErrors(BindingResult result){
@@ -149,5 +161,15 @@ public class CenterUserController extends BaseController {
         users.setUpdatedTime(null);
         users.setBirthday(null);
         return users;
+    }
+    private UsersVO convertUsersVO(Users users){
+        //redis实现用户的分布式会话
+        String uniqueToken= UUID.randomUUID().toString().trim();
+        UsersVO usersVO = new UsersVO();
+        //比如密码手机号邮箱多余的不会拷贝过去
+        BeanUtils.copyProperties(users,usersVO);
+        usersVO.setUserUniqueToken(uniqueToken);
+        redisOperator.set(REDIS_USER_TOKEN+":"+users.getId(),uniqueToken,30*60);
+        return usersVO;
     }
 }

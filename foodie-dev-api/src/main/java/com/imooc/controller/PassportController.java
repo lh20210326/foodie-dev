@@ -2,6 +2,7 @@ package com.imooc.controller;
 
 import com.imooc.pojo.Users;
 import com.imooc.pojo.bo.UserBO;
+import com.imooc.pojo.vo.UsersVO;
 import com.imooc.service.UserService;
 import com.imooc.utils.CookieUtils;
 import com.imooc.utils.IMOOCJSONResult;
@@ -10,19 +11,24 @@ import com.imooc.utils.MD5Utils;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.apache.commons.lang3.StringUtils;
+import org.n3r.idworker.utils.RedisOperator;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import java.util.UUID;
 
 @Api(value = "注册登录",tags = {"用于注册登录的相关接口"})
 @RestController
 @RequestMapping("passport")
-public class PassportController {
+public class PassportController extends BaseController{
     @Autowired
     private UserService userService;
+    @Autowired
+    private RedisOperator redisOperator;
 
     /**
      * 判断用户名是否存在
@@ -77,8 +83,11 @@ public class PassportController {
         }
         //5.实现注册
         Users users = userService.createUser(userBO);
-        users=setNullProperty(users);
-        CookieUtils.setCookie(request,response,"user", JsonUtils.objectToJson(users),true);
+
+//        users=setNullProperty(users);
+        UsersVO usersVO = convertUsersVO(users);
+        //保存信息到cookie
+        CookieUtils.setCookie(request,response,"user", JsonUtils.objectToJson(usersVO),true);
         return IMOOCJSONResult.ok();
     }
 
@@ -109,9 +118,10 @@ public class PassportController {
         if(users==null){
             return IMOOCJSONResult.errorMsg("用户名或密码不正确");
         }
-        users=setNullProperty(users);
-        CookieUtils.setCookie(request,response,"user", JsonUtils.objectToJson(users),true);
-        //TODO 生成token,存入redis会话
+//        users=setNullProperty(users);
+        UsersVO usersVO = convertUsersVO(users);
+
+        CookieUtils.setCookie(request,response,"user", JsonUtils.objectToJson(usersVO),true);
         //TODO 同步购物车数据
         return IMOOCJSONResult.ok(users);
     }
@@ -128,7 +138,8 @@ public class PassportController {
         //清楚用户相关cookie
         CookieUtils.deleteCookie(request,response,"user");
         //用户退出登录，需要清空购物车
-        //分布式会话需要清除用户数据
+        //分布式会话需要清除redis用户数据
+        redisOperator.del(REDIS_USER_TOKEN+":"+userId);
         return IMOOCJSONResult.ok();
     }
     private Users setNullProperty(Users users) {
@@ -139,6 +150,16 @@ public class PassportController {
         users.setUpdatedTime(null);
         users.setBirthday(null);
         return users;
+    }
+    private UsersVO convertUsersVO(Users users){
+        //redis实现用户的分布式会话
+        String uniqueToken= UUID.randomUUID().toString().trim();
+        UsersVO usersVO = new UsersVO();
+        //比如密码手机号邮箱多余的不会拷贝过去
+        BeanUtils.copyProperties(users,usersVO);
+        usersVO.setUserUniqueToken(uniqueToken);
+        redisOperator.set(REDIS_USER_TOKEN+":"+users.getId(),uniqueToken,30*60);
+        return usersVO;
     }
 }
 
