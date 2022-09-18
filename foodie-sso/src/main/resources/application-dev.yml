@@ -1,0 +1,14 @@
+server:
+  port: 8090
+spring:
+  datasource:
+    url: jdbc:mysql://localhost:3306/foodie-shop-dev?useUnicode=true&characterEncoding=UTF-8&autoReconnect
+    password: root
+  redis:
+    database: 1
+    host: 101.42.168.101
+    port: 6379
+    password: liuhao123@
+mybatis:
+  configuration:
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
